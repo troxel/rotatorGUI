@@ -49,6 +49,9 @@ router.get('/xhr', async function(req, res, next) {
    // ------- Rotation Data ------
    const rotSnip = await db.getLastRows("encoder", "ts", 4)
 
+   const tck005Db = await db.getLastRows("tracker005", "ts", 1)
+   const tck007Db = await db.getLastRows("tracker007", "ts", 1)
+
    if (rotSnip.error) {
       console.error("DB Error")
       res.json({
