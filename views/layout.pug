@@ -1,7 +1,99 @@
 doctype html
 html
   head
-    title= title
-    link(rel='stylesheet', href='/stylesheets/style.css')
+    title Sail #{title}
+
+    script(src='/js/bootstrap.min.js')
+    script(src='/jquery.min.js')
+    script(src='/plotly.min.js')
+
+    script(src='/js/data-xhr-hdlr.js')
+    script(src='/js/plot-data.js')
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+ 
+    style.
+      .shaded {
+        background-color: #ccc;
+        color: #676;
+        border: 1px solid #979;
+        th: 
+      }
+    script.
+
+      function rosette(angle) {
+        const handle = document.getElementById('rotary-indicator');
+        handle.style.transform = `rotate(${angle}deg)`;
+      }
+
+
+      document.addEventListener('DOMContentLoaded', function() {
+
+        const updateTime = 1000
+
+        var dh = dataXhrHdlr({rosette:rosette});
+
+        async function getUpdate() {
+
+          try {
+
+            const rsp = await fetch('/xhr')
+
+            if ( !rsp.ok ) {
+              console.log("Error with fetch") 
+              throw new Error(`Response status: ${response.status}`)
+            }
+
+            const data = await rsp.json();
+            //console.log('data',data)
+
+            dh.process(data)
+
+            //- if (data) {
+
+            //-   document.getElementById("fltBang").innerHTML = "";
+
+            //- } else {
+
+            //-   document.getElementById("fltBang").innerHTML = "No Data!";
+
+            //- }
+
+            toId = setTimeout(getUpdate, updateTime);
+
+
+          } catch (err) {
+
+            document.getElementById("fltBang").innerHTML = "Web Server Down!";
+            //- document.getElementById("gpsConnected").innerHTML = "-"
+            //- document.getElementById("phinsConnected").innerHTML = "-"
+            console.log("Error with connection",err)
+
+          }
+
+        }  
+
+        // Initial check
+        getUpdate();
+
+      })
+
   body
+    nav.navbar.navbar-expand.navbar-dark.bg-dark.mb-4.shadow
+      .container.shadow
+        span.text-white.lead.fs-5 Sail Experiment  / 
+        ul.navbar-nav.me-auto.mb-2.mb-lg-0
+          li.nav-item
+            a#home.nav-link.fs-5(href='/') Home
+          li.nav-item.text-white.mt-2 .  
+          li.nav-item
+            a#plotting.nav-link.fs-5(href="/plot") Plotting
+          li.nav-item.text-white.mt-2 .  
+          li.nav-item
+            a#plotting.nav-link.fs-5(href="/status") Status
+ 
+        #fltBang.text-danger.fs-5.me-2.fw-bolder
+        #timeFmt.text-white.fw-bold.text-center.bg-success(style="width:170px;")
+        #spn.text-white.fw-bold.text-center(style="width:20px")
+    
     block content

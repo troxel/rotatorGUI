@@ -1,5 +1,145 @@
 extends layout
 
 block content
-  h1= title
-  p Welcome to #{title}
+  .container
+    section.row
+      // Column 1: Sensor Data Table
+      .col-md-5
+        h2 Rotator Control
+        //img(src="./img/rosette.png")
+        svg(width="200" height="200" viewBox="0 0 200 200")
+          style.
+            #rotary-indicator { transform-origin: center; }
+            #handle { fill: red; transform-origin: 50% 50%; }
+          image(id="rotary-indicator" href="/img/submarine.png" width="200" height="200")
+          path(id="handle" d="M 94,100 L 107,100 L 100,13 Z")
+
+        table
+            tr
+              td#depth0.lead.fw-bold(width=100) 0
+              td#depthLbl.lead.fw-bold Target Depth (ft)
+        table
+            tr
+              td#position.lead(width=100) 
+              td#positionLbl.lead Shaft Encoder Angle (°)
+              td(colspan=99) 
+            tr
+              td#positionRate.lead(width=100) 
+              td#positionRateLbl.lead Shaft Encoder Rate (°/min)
+ 
+
+      // Column 2: Controls
+      .col-md-6
+        h2 Controls
+        .mb-2.mt-2
+          button#btn-acquire.btn.btn-sm.btn-primary(type='button', style="display:none;")
+          //button.btn.btn-primary(type='button' id='toggle-store-data-btn')
+          //  span#store-data-spinner.spinner-border.spinner-border(role='status', aria-hidden='true', style='display:none')
+          //  | Start Acquire
+        
+        .form
+          .mt-4.mb-3
+            input(type='number' id='angle' style="width:75px;")  
+            label.ms-2(for='angle' style='') Target Angle (+/- 190 &deg;)
+          .mb-3
+            input.w-10(type='number' id='rate' style="width:75px;")
+            label.ms-2(for='rate' style='') Rotation Rate (1 - 20 &deg;/min)
+          .mb-3#btn-go-grp()
+            button#btn-gorotate.btn.btn-sm.btn-success.col-2.me-5(type='button') Go
+            button#btn-gohome.btn.btn-sm.btn-primary.col-2.ms-5(type='button') Home
+            button#btn-goload.btn.btn-sm.btn-primary.col-2(type='button') Load
+          .mb-3#btn-stop-grp()
+            button#btn-stop.btn.btn-sm.btn-danger.col-2(type='button') Stop
+
+  .container.mt-3
+    section.row.border.border-primary.ms-1.mt-1()
+      .col 
+        #plot()
+
+    .row
+      .col-3
+        select#selPlot.select.form-select.mt-2.mb-2.form-select-sm(name="selPlot")
+          option(value="yaw01") Yaw
+          option(value="roll01") Roll
+          option(value="pitch01") Pitch
+          option(value="encoder") Encoder
+
+      .col-3
+        select#selRng.select.form-select.mt-2.mb-2.w-50().form-select-sm
+          option(value=null,'disabled') Select Data Range
+          each opt of [.1,.5,1,2,4,8,24,48,96]
+            option(value=opt) #{opt} Hours
+
+      .col-4.mt-2.mb-2.fs-4.text-danger#nodata
+      .col-2
+        label.form-check-label.mt-3(for=stopUpdate) Stop Update  
+        input#stopUpdate.form-check-input.shadow.mt-3(type="checkbox" name="stopUpdate" value=true)         
+
+  script.
+
+    let storingData = false;
+
+    document.getElementById('btn-acquire').addEventListener('click', function() {
+      if ( this.value == 1 ) {
+        fetch('/stop_acquire')
+        console.log('stopping ',this.value)
+        this.style.visibility = "hidden"
+      } else {
+        fetch('/start_acquire')
+        console.log('starting', this.value)
+        this.style.visibility = "hidden"
+      }
+    })
+
+    // ------- Rotate button handlers ------- 
+    function sndRotCmd(angle,rate) {
+
+      angle = parseInt(angle);
+      rate = parseInt(rate);
+
+      if ( (angle > 190) || (angle < -190 ) ) { 
+        alert("Angle must be between 190 and -190")
+        return
+      }
+
+      if ( ( rate > 20 ) || (rate < 0 ) ) { 
+        alert("rate must be between 0 and 20")
+        return
+      }
+
+      // Set values in input boxes
+      document.getElementById('angle').value = angle
+      document.getElementById('rate').value = rate
+
+      const getStr = `/set_rotation?angle=${angle}&rate=${rate}` 
+
+      console.log("sending rotate command: ",angle,rate)
+
+      fetch(getStr)
+    }
+
+    document.getElementById('btn-gorotate').addEventListener('click', function() {
+      let angle = document.getElementById('angle').value
+      let rate = document.getElementById('rate').value
+      
+      sndRotCmd(angle,rate)
+    })      
+    
+    document.getElementById('btn-gohome').addEventListener('click', function() {
+      sndRotCmd(0,20)
+    })      
+    
+    document.getElementById('btn-goload').addEventListener('click', function() {
+      sndRotCmd(90,20)
+    })  
+
+    document.getElementById('btn-stop').addEventListener('click', function() {
+      fetch("/stop_rotator")
+    })  
+    //--------------------------------------
+
+    $( document ).ready( () => {
+    
+      get_plot_data(3000,"/subplot")
+    
+    })

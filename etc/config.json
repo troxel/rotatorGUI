@@ -1,0 +1,17 @@
+//***************************************************************************************
+//
+//***************************************************************************************
+
+const config = {
+  db: {
+    host: "localhost",
+    user: "webdev",
+    password: "webdev1!",
+    database: "lsvsail",
+    multipleStatements: true,
+    connectionLimit : 10,
+  },
+  parameter: 10,
+};
+
+module.exports = config;

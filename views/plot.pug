@@ -1,0 +1,48 @@
+extends layout
+
+block content
+
+  .container
+    .row
+      .col-3
+        select#selPlot.select.form-select.mt-2.mb-2(name="selPlot")
+          option(value="depth0") Depth Upper
+          option(value="depth1") Depth Lower
+          option(value="depth_diff") Depth Diff
+          option(value="roll01") Roll Combined
+          option(value="pitch01") Pitch Combined
+          option(value="yaw01") Yaw Combined
+          option(value="encoder") Encoder Angle
+
+      .col-3
+        select#selRng.select.form-select.mt-2.mb-2.w-50()
+          option(value=null,'disabled') Select Data Range
+          each opt of [.1,.5,1,2,4,8,24,48,96]
+            option(value=opt) #{opt} Hours
+
+      .col-4.mt-2.mb-2.fs-4.text-danger#nodata
+      .col-2
+        label.form-check-label.mt-3(for=stopUpdate) Stop Update  
+        input#stopUpdate.form-check-input.shadow.mt-3(type="checkbox" name="stopUpdate" value=true) 
+
+  .container
+
+    .row.border.border-primary.ms-1.mt-1()
+      .col()
+        #plot()
+
+  script.
+
+    $( document ).ready( () => {
+
+      //document.getElementById("tnd").classList.add("active");
+
+      // ------------------------
+      // XHR Data
+      // ------------------------
+      //var dh = dataHdlr()
+
+     get_plot_data(3000, "/plot/xhr")
+    
+    })
+
