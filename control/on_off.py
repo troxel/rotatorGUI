@@ -5,13 +5,13 @@ import time
 GPIO.setmode(GPIO.BCM)  # or GPIO.BOARD
 
 # Set up the GPIO pin
-GPIO_PIN = 18  # Replace with your GPIO pin number
+GPIO_PIN = 17  # Replace with your GPIO pin number
 GPIO.setup(GPIO_PIN, GPIO.OUT)
 
 # Turn the GPIO pin on
 GPIO.output(GPIO_PIN, GPIO.HIGH)
 print("GPIO pin turned ON")
-time.sleep(2)  # Keep the pin on for 2 seconds
+time.sleep(1)  # Keep the pin on for 2 seconds
 
 # Turn the GPIO pin off
 GPIO.output(GPIO_PIN, GPIO.LOW)

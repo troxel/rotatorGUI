@@ -1,6 +1,8 @@
 var express = require('express');
 
-var router = express.Router();
+// Acquiring router from plots
+//var router = express.Router();
+var router = require('./plots')
 
 const { execSync } = require('child_process');
 
@@ -12,14 +14,15 @@ var RAD2PI = 180 / Math.PI
 
 const db = require('../models/depth_mdl');
 
-var posDiffPrev = 0
-var posDiffPrevPrev = 0
+var posDiffPrev0 = 0
+var posDiffPrev1 = 0
+var posDiffPrev2 = 0
 
 // -----------------------------------------------------------
 //  GET System Data Paint Page
 // -----------------------------------------------------------
 router.get('/', async (req, res, next) => {
-
+ 
    res.render('index', {});
 
 });
@@ -51,20 +54,18 @@ router.get('/xhr', async function(req, res, next) {
    // ------- Rotation Data ------
    const rotSnip = await db.getLastRows("encoder", "ts", 4)
 
-   if (rotSnip.error) {
-      console.error("DB Error")
-      res.json({
-         error: rotSnip.error
-      })
+   if ( rotSnip.length == 0 ) {
+      console.error("No Data")
+      res.json({ error: "No Data" } )
       return
    }
 
    innerHTML.position = rotSnip[0].position
 
    const ts_encoder_diff = (Date.now() - rotSnip[0].ts) / 1000
-   
+
    // ------- Rotation active! -------
-   if (ts_encoder_diff < Math.abs(2) ) {
+   if ( ts_encoder_diff < Math.abs(2) ) {
 
       classList.position = { add: "text-success",  remove: "text-secondary" }
       classList.positionRate = { add: "text-success",  remove: "text-secondary" }
@@ -90,9 +91,10 @@ router.get('/xhr', async function(req, res, next) {
       // For small time diffs the rate can be really high. Don't know where the issue is but don't have time to chase it down
       // Do we really need rate? 
       if ( Math.abs(posDiff) < 30 ) {
-         innerHTML.positionRate = (posDiff*0.4 + posDiffPrev*0.35 + posDiffPrevPrev*0.25).toFixed(1)  // Smooth
-         posDiffPrev = posDiff
-         posDiffPrevPrev = posDiffPrev
+         innerHTML.positionRate = (posDiff*0.40 + posDiffPrev0*0.20 + posDiffPrev1*0.20 + posDiffPrev2*0.20).toFixed(1)  // Smooth
+         posDiffPrev0 = posDiff
+         posDiffPrev1 = posDiffPrev0
+         posDiffPrev2 = posDiffPrev1
       }
 
    // ------- Rotation is NOT active-------
@@ -117,26 +119,26 @@ router.get('/xhr', async function(req, res, next) {
    // ------- Active is based on if daemon is running. Probably best to base on data. TODO -------
    let dpthInstance = 0
    if (isActive('lsvsail_depth_attitude', 0)) {
-      classList.dpth0 = {
-         replace: ['text-danger', 'text-success']
-      }
+      classList.dpth0 = { replace: ['text-danger', 'text-success'] }
       dpthInstance++
    } else {
-      classList.dpth0 = {
-         replace: ['text-success', 'text-danger']
-      }
+      classList.dpth0 = { replace: ['text-success', 'text-danger'] }
    }
 
    if (isActive('lsvsail_depth_attitude', 1)) {
-      classList.dpth1 = {
-         replace: ['text-danger', 'text-success']
-      }
+      classList.dpth1 = { replace: ['text-danger', 'text-success'] }
       dpthInstance++
    } else {
-      classList.dpth1 = {
-         replace: ['text-success', 'text-danger']
-      }
+      classList.dpth1 = { replace: ['text-success', 'text-danger'] }
    }
+
+   // if (isActive('lsvsail_tracker_cntl')) {
+   //    //classList.dpth1 = { replace: ['text-danger', 'text-success'] }
+   //    console.log("track cntl is active")
+   // } else {
+   //    console.log("track cntl is in active")
+   //    //classList.dpth1 = { replace: ['text-success', 'text-danger'] }
+   // }
 
    //console.log('dpthInstance',dpthInstance)
 
@@ -207,7 +209,7 @@ router.get('/subplot', async function(req, res, next) {
          dObj[i] = await mdl.getRowsForPastSecs(Rng,'depth' + i,'ts' + i, rpy + i)
 
          if ( typeof dObj[i] === "undefined" ) { 
-            res.json({ 'error': `No Data traceLst ${PlotId}`})
+            res.json({ 'error': `No Data traceLst ${PlotId} ${Rng}`})
             return;  
          }
          //console.log(dObj[i])
@@ -232,7 +234,7 @@ router.get('/subplot', async function(req, res, next) {
       layout.yaxis.title.text = rpyLbl + ' deg'
       layout.yaxis.title.font = { size: 16, color: '#7f7f7f' }
 
-      layout.height = 275
+      layout.height = 325
       layout.margin = {t:50,r:25,l:45,b:70}
 
    } else if ( PlotId == 'encoder' ) {
@@ -268,6 +270,9 @@ router.get('/subplot', async function(req, res, next) {
       layout.title.text = 'Encoder'
       layout.xaxis.title.text = 'Time'
       layout.yaxis.title.text = 'Encoder Angle'
+      
+      layout.height = 325
+      layout.margin = {t:50,r:25,l:45,b:70}
    } 
 
    res.json({
@@ -280,6 +285,7 @@ router.get('/subplot', async function(req, res, next) {
 // Route to stop the systemd units
 router.get('/stop_acquire', async (req, res) => {
    const cmd = 'sudo systemctl stop lsvsail_depth_attitude@0 lsvsail_depth_attitude@1'
+   console.log("\nStop Sent!!!!\n")
    const rtn = executeCmd(cmd)
    res.sendStatus(200)
 
@@ -330,7 +336,10 @@ router.get('/set_rotation', async (req, res) => {
 // Route to start the systemd units
 router.get('/stop_rotation', async (req, res) => {
  
-   // Add stop command here!!!!!!!!!!!!
+   // Stop command!
+   const cmd = 'sh ./control/on_off.sh'
+   const rtn = executeCmd(cmd)
+   res.sendStatus(200)
 
 })
 
@@ -342,14 +351,24 @@ router.get('/stop_rotation', async (req, res) => {
 function isActive(template, instance) {
 
    try {
-      const output = execSync(`systemctl is-active ${template}@${instance}`, {
-         encoding: 'utf-8'
-      });
-      if (output.trim() === 'active') {
-         return true;
+      let output
+      if ( typeof instance !== "undefined" ) {
+         output = execSync(`systemctl is-active ${template}@${instance}`, {encoding: 'utf-8'});
+      } 
+      else {
+         output = execSync(`systemctl is-active ${template}`, {encoding: 'utf-8'});
       }
+
+      if (output.trim() === 'active') {
+         return true
+      }
+      else {
+         return false
+      }
+
    } catch (error) {
       // If an error is caught, it means the instance is not active or does not exist
+      console.error("Error:",error)
       return false;
    }
 }
@@ -385,6 +404,5 @@ function decompose(str) {
    }
    return null;
  }
- 
 
 module.exports = router

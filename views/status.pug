@@ -7,106 +7,59 @@ block content
  
     .row
       // Column 1: Sensor Data Table
-      .col-md-6
+      .col-md-8
         h2 AHRS/Depth Sensor Data
         //img(src="./img/rosette.png")
-        table.table.table-bordered.table-striped.table-sm
+        table.table.table-bordered.table-striped.table-shadow
           thead
             tr
-              th Scope
-              th#dpth0.text-danger Sensor 1
-              th#dpth1.text-danger Sensor 2
+              th Sensor
+              th Time
+              th DepthRoll
+              th Roll
+              th Pitch
+              th Yaw
           tbody
             tr
-              td Depth
+              th#botDpth Bottom
+              td#tsFmt0
               td#depth0 0
-              td#depth1 0
-            tr
-              td Roll
               td#roll0 0
-              td#roll1 0
-            tr
-              td Pitch
               td#pitch0 0
-              td#pitch1 0
-            tr
-              td Yaw
               td#yaw0 0
+            tr
+              th#topDpth Top
+              td#tsFmt1
+              td#depth1 0
+              td#roll1 0
+              td#pitch1 0
               td#yaw1 0
-          
-        
+         
+        h2.mt-3 Tracker Data
+        table.table.table-shadow.table-bordered.table-striped
+          tr
+            th Tracker
+            th Time
+            th X
+            th Y
+            th Z
+            th Integrity
+            th RSSI
+            th tdiff
 
-
-      // Column 2: Controls
-      .col-md-3
-        h2 Controls
-        .mb-2.mt-2
-          button#btn-acquire.btn.btn-sm.btn-primary(type='button')
-          //button.btn.btn-primary(type='button' id='toggle-store-data-btn')
-          //  span#store-data-spinner.spinner-border.spinner-border(role='status', aria-hidden='true', style='display:none')
-          //  | Start Acquire
-        hr
-        .input-group.input-group-sm
-          .mt-4
-            label(for='angle') Rotation Angle
-            input.form-control(type='number' id='angle')
-          .mb-3
-            label(for='speed') Rotation Speed
-            input.form-control(type='number' id='speed')
-          .mb-3
-            button#btn-rotate.btn.btn-sm.btn-success(type='button') Send Rotation Cmd
-
+          each val in [1, 2, 3, 4, 5, 6, 7]
+            tr
+              th( id="T00" + val)= "00" + val
+              td( id="tsFmt00" + val )
+              td( id="X00" + val )
+              td( id="Y00" + val )
+              td( id="Z00" + val )
+              td( id="Integrity00" + val )
+              td( id="RSSI00" + val )
+              td.text-end( id="tsDiff00" + val )
   script.
-    let storingData = false;
 
-    document.getElementById('btn-acquire').addEventListener('click', function() {
-      if ( this.value == 1 ) {
-        fetch('/stop_acquire')
-        console.log('stopping ',this.value)
-        this.style.visibility = "hidden"
-      } else {
-        fetch('/start_acquire')
-        console.log('starting', this.value)
-        this.style.visibility = "hidden"
-      }
+    $( document ).ready( () => {
+        console.log('calling')
+        get_xhr_data(1000,"/status/xhr");
     })
-
-    //- document.getElementById('toggle-store-data-btn').addEventListener('click', function() {
-
-    //-   storingData = !storingData;
-    //-   const spinner = document.getElementById('store-data-spinner');
-
-    //-   if (storingData) {
-    //-     this.innerHTML = 'Stop Acquire';
-    //-     spinner.style.display = 'inline-block';
-    //-     // Add functionality to start storing data
-    //-   } else {
-    //-     this.innerHTML = 'Start Acquire';
-    //-     spinner.style.display = 'none';
-    //-     // Add functionality to stop storing data
-    //-   }
-    //- });
-
-    document.getElementById('btn-rotate').addEventListener('click', function() {
-            
-      const angle = parseInt(document.getElementById('angle').value);
-      const speed = parseInt(document.getElementById('speed').value);
-
-      if ( (angle > 190) || (angle < -190 ) ) { 
-        alert("Angle must be between 190 and -190")
-        return
-      }
-
-      if ( ( speed > 22 ) || (speed < 0 ) ) { 
-        alert("Speed must be between 0 and 22")
-        return
-      }
-
-      document.getElementById('angle').value = angle
-      document.getElementById('speed').value = speed
-
-      const getStr = `/set_rotation?angle=${angle}&speed=${speed}` 
-
-      fetch(getStr)
-
-    })  

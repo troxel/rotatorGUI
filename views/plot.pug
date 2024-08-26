@@ -12,6 +12,8 @@ block content
           option(value="roll01") Roll Combined
           option(value="pitch01") Pitch Combined
           option(value="yaw01") Yaw Combined
+          option(value="yaw02") Yaw Lower
+          option(value="yaw03") Yaw Upper
           option(value="encoder") Encoder Angle
 
       .col-3
@@ -42,7 +44,9 @@ block content
       // ------------------------
       //var dh = dataHdlr()
 
-     get_plot_data(3000, "/plot/xhr")
-    
+     //get_plot_data(3000, "/plot/xhr")
+     pd = new plot_data(1000,"/plot/xhr")
+     pd.get_plot_data()
+
     })
 

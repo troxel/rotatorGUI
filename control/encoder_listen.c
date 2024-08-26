@@ -77,6 +77,8 @@ void open_serial_port() {
         perror("Error from tcsetattr");
         exit(1);
     }
+
+    printf("Serial port opened %s %d\n",PORT, serial_fd);
 }
 
 void connect_to_database() {

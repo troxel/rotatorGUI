@@ -5,7 +5,7 @@ block content
     section.row
       // Column 1: Sensor Data Table
       .col-md-5
-        h2 Rotator Control
+        h2 Rotator Position
         //img(src="./img/rosette.png")
         svg(width="200" height="200" viewBox="0 0 200 200")
           style.
@@ -50,18 +50,26 @@ block content
             button#btn-goload.btn.btn-sm.btn-primary.col-2(type='button') Load
           .mb-3#btn-stop-grp()
             button#btn-stop.btn.btn-sm.btn-danger.col-2(type='button') Stop
+          .mt-5#btn-localization-corrdination 
+            button#btn-loco-coor.btn.btn-sm.btn-success.col-2(type='button') Start 
+            span.ms-3 Localization Coordination
 
   .container.mt-3
-    section.row.border.border-primary.ms-1.mt-1()
+    section.row.border.border-primary()
       .col 
         #plot()
 
     .row
       .col-3
         select#selPlot.select.form-select.mt-2.mb-2.form-select-sm(name="selPlot")
-          option(value="yaw01") Yaw
-          option(value="roll01") Roll
-          option(value="pitch01") Pitch
+          option(value="yaw2") Yaw
+          option(value="yaw1") Yaw Upper
+          option(value="yaw0") Yaw Lower
+          option(value="roll2") Roll
+          option(value="pitch2") Pitch
+          option(value="depth0") Depth Lower
+          option(value="depth1") Depth Upper
+          option(value="depth2") Depth
           option(value="encoder") Encoder
 
       .col-3
@@ -91,6 +99,7 @@ block content
       }
     })
 
+    // ----------------------------------------
     // ------- Rotate button handlers ------- 
     function sndRotCmd(angle,rate) {
 
@@ -117,6 +126,7 @@ block content
 
       fetch(getStr)
     }
+    // ----------------------------------------
 
     document.getElementById('btn-gorotate').addEventListener('click', function() {
       let angle = document.getElementById('angle').value
@@ -134,12 +144,28 @@ block content
     })  
 
     document.getElementById('btn-stop').addEventListener('click', function() {
-      fetch("/stop_rotator")
+      console.log("stopping rotation")
+      fetch("/stop_rotation")
     })  
+
+    //- document.getElementById('btn-loco-start').addEventListener('click', function() {
+    //-   console.log("starting loco")
+    //-   fetch("/start_loco")
+    //- })  
+
+    //- document.getElementById('btn-loco-stop').addEventListener('click', function() {
+    //-   console.log("stop loco")
+    //-   fetch("/stop_loco")
+    //- })  
     //--------------------------------------
 
     $( document ).ready( () => {
     
-      get_plot_data(3000,"/subplot")
+      get_xhr_data(1000,"/xhr");
+
+      //get_plot_data(2000,"/plots")
+      pd = new plot_data(2000,"/plots")
+      pd.get_plot_data()
+
     
     })

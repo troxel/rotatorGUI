@@ -84,8 +84,13 @@ router.get('/xhr', async function(req, res, next) {
 
          //console.log(dObj[i])
 
+         if (typeof dObj[i] == "undefined") {
+            console.error("DB Error No object returned ",rpy+1)
+            continue; 
+         }
+
          if ( dObj[i].error ) {
-            console.error("DB Error ", dObj[i].error )
+            console.error("DB Error ", dObj[i].error, i )
             traceLst[i] = {}
          }
          else {
@@ -104,6 +109,37 @@ router.get('/xhr', async function(req, res, next) {
       layout.xaxis.title.text = 'Time'
       layout.yaxis.text = rpyLbl + ' Deg'
       
+   } else if ( ( PlotId == 'yaw02') || ( PlotId == 'yaw03') ) {
+
+         let tsCol = 'ts0'
+         let tbl = 'depth0'
+         let col = 'yaw0'
+         const match = PlotId.match(IdRx)
+         if (match[2] == 3) { 
+            tsCol = 'ts1'
+            tbl = 'depth1' 
+            col = 'yaw1'
+         } 
+      
+         dObj = await mdl.getRowsForPastSecs(Rng,tbl,tsCol,col)
+         if ( dObj.error ) {
+            console.error("DB Error")
+            res.json({ error: dObj.error} )
+            return
+         }
+   
+         traceLst[0] = {
+            x: dObj.ts,
+            y: dObj.vec,
+            name: 'Yaw',
+            mode: 'lines+markers',
+            type: 'scatter',
+         }
+   
+         layout.yaxis.title.text = 'Yaw'
+         layout.xaxis.title.text = 'Time'
+         layout.yaxis.text = 'Yaw'
+
    // --------- Encoder  ---------
    } else if ( PlotId == 'encoder' ) {
 

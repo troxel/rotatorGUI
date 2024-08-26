@@ -36,121 +36,54 @@ router.get('/xhr', async function(req, res, next) {
    const rst = await db.getLastDpthRow()
    innerHTML = rst
 
+   let dt0Obj = new Date(rst.ts0)
+   let dt1Obj = new Date(rst.ts1)
+
+   innerHTML.tsFmt0 = dt0Obj.toLocaleDateString() + " " + dt0Obj.toLocaleTimeString() 
+   innerHTML.tsFmt1 = dt1Obj.toLocaleDateString() + " " + dt1Obj.toLocaleTimeString() 
+
    // ------- Change highlighting if depth data is not current. -------    
-   const ts_dpth_diff = (Date.now() - rst.ts0) / 1000;
+   const ts0_dpth_diff = (Date.now() - rst.ts0) / 1000;
+   const ts1_dpth_diff = (Date.now() - rst.ts1) / 1000;
    //console.log(">>>>>>>>",Date.now(), rst.ts0,ts_dpth_diff)
 
-   if (ts_dpth_diff < 10) {
-      classList.depth0 = { add: "text-success", remove: "text-danger" }
+   if (ts0_dpth_diff < 10) {
+      classList.botDpth = { add: "text-success", remove: "text-danger" }
    } else {
-      classList.depth0 = { add: "text-danger",  remove: "text-success" }
+      classList.botDpth = { add: "text-danger",  remove: "text-success" }
    }
 
-   // ------- Rotation Data ------
-   const rotSnip = await db.getLastRows("encoder", "ts", 4)
-
-   const tck005Db = await db.getLastRows("tracker005", "ts", 1)
-   const tck007Db = await db.getLastRows("tracker007", "ts", 1)
-
-   if (rotSnip.error) {
-      console.error("DB Error")
-      res.json({
-         error: rotSnip.error
-      })
-      return
+   if (ts1_dpth_diff < 10) {
+      classList.topDpth = { add: "text-success", remove: "text-danger" }
+   } else {
+      classList.topDpth = { add: "text-danger",  remove: "text-success" }
    }
 
-   innerHTML.position = rotSnip[0].position
+   // ------- Tracker Data ------
+   for (let i = 1; i <= 7; i++ ) {
+      let rslt = await db.getLastRows("tracker00" + i, "ts", 1)
 
-   const ts_encoder_diff = (Date.now() - rotSnip[0].ts) / 1000
-   
-   // ------- Rotation active! -------
-   if (ts_encoder_diff < Math.abs(2) ) {
-      //classList.position = { add: "text-success", remove: "text-warning" }
-      classList['btn-gorotate'] = { add: "disabled" }
-      classList['btn-gohome']   = { add: "disabled" }
-      classList['btn-goload']   = { add: "disabled" }
+      if (rslt.length === 0 ) { continue }
 
-      // ---- show stop and hide go ---
-      // The div group doesn't seem to work
-      style['btn-gorotate'] = { display: "none" }
-      style['btn-gohome']   = { display: "none" }
-      style['btn-goload']   = { display: "none" }
-      style['btn-stop'] = { display:"inline"}
-
-      // ------- Calc rate if data is current -------
-      let posDiff = ( rotSnip[0].position - rotSnip[1].position) / (rotSnip[0].ts - rotSnip[1].ts)
-      posDiff = posDiff * 1000*60    // per minute
-
-      // For small time diffs the rate can be really high. Don't know where the issue is but don't have time to chase it down
-      // Do we really need rate? 
-      if ( Math.abs(posDiff) < 30 ) {
-         innerHTML.positionRate = (posDiff*0.4 + posDiffPrev*0.35 + posDiffPrevPrev*0.25).toFixed(1)  // Smooth
-         posDiffPrev = posDiff
-         posDiffPrevPrev = posDiffPrev
+      for ( var k in rslt[0] ) {
+         innerHTML[`${k}00${i}`] = rslt[0][k];
       }
 
-   } else {
-      classList['btn-gorotate'] = { remove: "disabled" }
-      classList['btn-gohome']   = { remove: "disabled" }
-      classList['btn-goload']  = { remove: "disabled" }
+      let dtObj = new Date(rslt[0].ts);
+      innerHTML[`tsFmt00${i}`] = dtObj.toLocaleDateString() + " " + dtObj.toLocaleTimeString()
 
-      style['btn-gorotate'] = { display: "inline" }
-      style['btn-gohome']   = { display: "inline" }
-      style['btn-goload']   = { display: "inline" }
-      style['btn-stop']     = { display:"none"}
-
-      //classList.position = { add: "text-warning",  remove: "text-success" }
-
-      innerHTML.positionRate = 0
-   }
-
-   // ------- Active is based on if daemon is running. Probably best to base on data. TODO -------
-   let dpthInstance = 0
-   if (isActive('lsvsail_depth_attitude', 0)) {
-      classList.dpth0 = {
-         replace: ['text-danger', 'text-success']
-      }
-      dpthInstance++
-   } else {
-      classList.dpth0 = {
-         replace: ['text-success', 'text-danger']
-      }
-   }
-
-   if (isActive('lsvsail_depth_attitude', 1)) {
-      classList.dpth1 = {
-         replace: ['text-danger', 'text-success']
-      }
-      dpthInstance++
-   } else {
-      classList.dpth1 = {
-         replace: ['text-success', 'text-danger']
-      }
-   }
-
-   //console.log('dpthInstance',dpthInstance)
-
-   setAttribute['angle'] = { value: req.cookies.angle }
-   setAttribute['rate'] = { value: req.cookies.rate }
-
-   if (dpthInstance > 0) {
-      innerHTML['btn-acquire'] = 'Stop Acquisition'
-      setAttribute['btn-acquire'] = {
-         value: 1
-      }
-      style['btn-acquire'] = {
-         visibility: "visible"
+      // Set the status color
+      let tsTrkDiff = (Date.now() - rslt[0].ts) / 1000;
+      const idTrk = "T00" + i
+      if (tsTrkDiff < 10) {
+         classList[idTrk] = { add: "text-success", remove: "text-danger" }
+      } else {
+         classList[idTrk] = { add: "text-danger",  remove: "text-success" }
       }
 
-   } else {
-      innerHTML['btn-acquire'] = 'Start Acquisition'
-      setAttribute['btn-acquire'] = {
-         value: 0
-      }
-      style['btn-acquire'] = {
-         visibility: "visible"
-      }
+      innerHTML["tsDiff00"+i] = tsTrkDiff.toFixed(1)
+      if ( tsTrkDiff > 1000 ) { innerHTML["tsDiff00"+i] = "--"} 
+
    }
 
    // Prepare to return

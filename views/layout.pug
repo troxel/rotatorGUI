@@ -8,6 +8,8 @@ html
     script(src='/plotly.min.js')
 
     script(src='/js/data-xhr-hdlr.js')
+
+    script(src='/js/xhr-data.js')
     script(src='/js/plot-data.js')
 
     <link rel="stylesheet" href="/css/bootstrap.min.css">
@@ -19,64 +21,58 @@ html
         border: 1px solid #979;
         th: 
       }
+
+      body {background-color: #eaf2f8;}
+
     script.
 
-      function rosette(angle) {
-        const handle = document.getElementById('rotary-indicator');
-        handle.style.transform = `rotate(${angle}deg)`;
-      }
+      //- // This is added function to data-xhr-hdlr to process the key rosette
+      //- function rosette(angle) {
+      //-   const handle = document.getElementById('rotary-indicator');
+      //-   handle.style.transform = `rotate(${angle}deg)`;
+      //- }
 
+      //- var dh = dataXhrHdlr({rosette:rosette});
 
-      document.addEventListener('DOMContentLoaded', function() {
+      //- async function get_xhr_data(repeatVal = 1000, urlXhr) {
 
-        const updateTime = 1000
+      //-   try {
 
-        var dh = dataXhrHdlr({rosette:rosette});
+      //-     console.log(urlXhr)
+      //-     const rsp = await fetch(urlXhr)
 
-        async function getUpdate() {
+      //-     if ( !rsp.ok ) {
+      //-       console.log("Error with fetch") 
+      //-       throw new Error(`Response status: ${rsp.status}`)
+      //-     }
 
-          try {
+      //-     const data = await rsp.json();
+      //-     //console.log('data',data)
 
-            const rsp = await fetch('/xhr')
+      //-     dh.process(data)
 
-            if ( !rsp.ok ) {
-              console.log("Error with fetch") 
-              throw new Error(`Response status: ${response.status}`)
-            }
+      //-     //- if (data) {
 
-            const data = await rsp.json();
-            //console.log('data',data)
+      //-     //-   document.getElementById("fltBang").innerHTML = "";
 
-            dh.process(data)
+      //-     //- } else {
 
-            //- if (data) {
+      //-     //-   document.getElementById("fltBang").innerHTML = "No Data!";
 
-            //-   document.getElementById("fltBang").innerHTML = "";
+      //-     //- }
 
-            //- } else {
+      //-     toId = setTimeout(get_xhr_data, repeatVal, repeatVal, urlXhr);
 
-            //-   document.getElementById("fltBang").innerHTML = "No Data!";
+      //-   } catch (err) {
 
-            //- }
+      //-     document.getElementById("fltBang").innerHTML = "Web Server Down!";
+      //-     //- document.getElementById("gpsConnected").innerHTML = "-"
+      //-     //- document.getElementById("phinsConnected").innerHTML = "-"
+      //-     console.log("Error with connection",err)
 
-            toId = setTimeout(getUpdate, updateTime);
+      //-   }
 
-
-          } catch (err) {
-
-            document.getElementById("fltBang").innerHTML = "Web Server Down!";
-            //- document.getElementById("gpsConnected").innerHTML = "-"
-            //- document.getElementById("phinsConnected").innerHTML = "-"
-            console.log("Error with connection",err)
-
-          }
-
-        }  
-
-        // Initial check
-        getUpdate();
-
-      })
+      //- }  
 
   body
     nav.navbar.navbar-expand.navbar-dark.bg-dark.mb-4.shadow

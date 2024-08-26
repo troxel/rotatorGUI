@@ -13,7 +13,7 @@ sub validate_command {
         # Validate position
         if ($position >= -190 && $position <= 190) {
             # Validate speed
-            if ($speed >= 1 && $speed <= 22) {
+            if ($speed >= 1 && $speed <= 20) {
                 return 1;  # Valid command
             }
         }
@@ -27,7 +27,6 @@ sub print_invalid_cmd {
     exit 1;
 }
 
-
 my $port = '/dev/ttyRotate';
 
 # Check if a command line argument is provided
@@ -36,7 +35,7 @@ if (@ARGV == 0) { print_invalid_cmd() };
 my $command = $ARGV[0];
 
 # Validate the command line argument
-#unless (validate_command($command)) { print_invalid_cmd() }
+unless (validate_command($command)) { print_invalid_cmd() }
 
 my $serial_port = Device::SerialPort->new($port) or die "Cannot open port $port: $!";
 
@@ -48,8 +47,11 @@ $serial_port->handshake("none");
 
 $serial_port->write_settings or die "Could not write settings to $port: $!";
 
-$serial_port->write($command) or die "Failed to write to $port: $!";
+print "Serial Port opened $port \n";
 
-print "Message sent: $command\n";
+my $rtn = $serial_port->write("$command") or die "Failed to write to $port: $!";
+$serial_port->write_drain() or die "Failed to write_drain to $port: $!"; # Did not need this on Rasp4 but needed on Rasp5 go figure
+
+print "Message sent: $command :$rtn\n";
 
 $serial_port->close or die "Could not close port $port: $!";
