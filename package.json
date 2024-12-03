@@ -20,7 +20,7 @@
     "morgan": "^1.10.0",
     "mysql2": "^3.10.0",
     "plotly.js-dist-min": "^2.33.0",
-    "pug": "^3.0.2"
+    "pug": "^3.0.3"
   },
   "devDependencies": {
     "mocha": "^9.0.0",
